@@ -157,6 +157,8 @@
           <option value="Laki-laki">Laki-laki</option>
           <option value="Perempuan">Perempuan</option>
         </select><br/><br/>
+        <label>Kelas:</label><br/>
+        <input type="text" id="kelas" required/><br/><br/>
         <button type="submit" class="btn btn-add">Simpan</button>
       </form>
     </div>
@@ -175,7 +177,6 @@
 
         if (response.ok) {
           const data = result.data;
-
           let html = `
             <table>
               <thead>
@@ -184,6 +185,7 @@
                   <th>Nama Siswa</th>
                   <th>NISN</th>
                   <th>Jenis Kelamin</th>
+                  <th>Kelas</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -197,8 +199,9 @@
                 <td>${item.nama_siswa}</td>
                 <td>${item.NISN}</td>
                 <td>${item.jenis_kelamin}</td>
+                <td>${item.kelas}</td>
                 <td>
-                  <button class="btn btn-edit" onclick="editAlternatif(${item.id_alternatif}, '${item.nama_siswa}', '${item.NISN}', '${item.jenis_kelamin}')">Edit</button>
+                  <button class="btn btn-edit" onclick="editAlternatif(${item.id_alternatif}, '${item.nama_siswa}', '${item.NISN}', '${item.jenis_kelamin}', '${item.kelas}')">Edit</button>
                   <button class="btn btn-delete" onclick="deleteAlternatif(${item.id_alternatif})">Hapus</button>
                 </td>
               </tr>
@@ -207,7 +210,6 @@
 
           html += `</tbody></table>`;
           container.innerHTML = html;
-
         } else {
           container.innerHTML = `<p style="color:red;">Gagal memuat data</p>`;
         }
@@ -239,6 +241,7 @@
       const nama_siswa = document.getElementById("nama_siswa").value;
       const NISN = document.getElementById("NISN").value;
       const jenis_kelamin = document.getElementById("jenis_kelamin").value;
+      const kelas = document.getElementById("kelas").value;
 
       const method = id ? "PUT" : "POST";
       const url = id ? `${apiURL}/${id}` : apiURL;
@@ -247,7 +250,7 @@
         const response = await fetch(url, {
           method: method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama_siswa, NISN, jenis_kelamin })
+          body: JSON.stringify({ nama_siswa, NISN, jenis_kelamin, kelas })
         });
 
         const result = await response.json();
@@ -264,11 +267,12 @@
       }
     });
 
-    function editAlternatif(id, nama, nisn, gender) {
+    function editAlternatif(id, nama, nisn, gender, kelas) {
       document.getElementById("id_alternatif").value = id;
       document.getElementById("nama_siswa").value = nama;
       document.getElementById("NISN").value = nisn;
       document.getElementById("jenis_kelamin").value = gender;
+      document.getElementById("kelas").value = kelas;
       document.getElementById("modalTitle").innerText = "Edit Alternatif";
       modal.style.display = "block";
     }
