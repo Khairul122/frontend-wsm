@@ -1,96 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hasil WSM</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-
-    h2, h3 {
-      color: #2c3e50;
-    }
-
-    button {
-      padding: 10px 20px;
-      background-color: #2ecc71;
-      border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #2c3e50;
-      color: white;
-    }
-
-    .highlight {
-      background-color: #e0f7e9;
-    }
-  </style>
-</head>
-<body>
-
-  <h2>Nilai Vektor WSM</h2>
-  <button onclick="prosesWSM()">Lakukan Perhitungan</button>
-
-  <div id="tabelVektorWSM"></div>
-
-  <h3>Hasil Ranking</h3>
-  <div id="tabelRanking"></div>
-
-  <script>
-    const apiUrl = "https://backend-wsm.vercel.app/api";
-
-    async function prosesWSM() {
-      try {
-        const res = await fetch(`${apiUrl}/proses-wsm`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert("❌ Gagal melakukan perhitungan: " + data.detail);
-          return;
-        }
-
-        const hasil = data.data;
-
-        // Ambil data nama siswa
-        const resAlt = await fetch(`${apiUrl}/alternatif`);
-        const dataAlt = await resAlt.json();
-        const altMap = {};
-        dataAlt.data.forEach(a => {
-          altMap[a.id_alternatif] = a.nama_siswa;
-        });
-
-        tampilkanNilaiVektor(hasil, altMap);
-        tampilkanRanking(hasil, altMap);
-
-        alert("✅ Perhitungan berhasil dilakukan!");
-      } catch (error) {
-        alert("⚠️ Error: " + error.message);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hasil WSM</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f5f5f5;
       }
-    }
 
-    function tampilkanNilaiVektor(data, altMap) {
-      let html = `
+      h2,
+      h3 {
+        color: #2c3e50;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #2ecc71;
+        border: none;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #2c3e50;
+        color: white;
+      }
+
+      .highlight {
+        background-color: #e0f7e9;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2c3e50;
+        padding: 10px 20px;
+        color: #fff;
+      }
+
+      .navbar h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .navbar ul {
+        list-style: none;
+        display: flex;
+        gap: 15px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .navbar ul li {
+        display: inline;
+      }
+
+      .navbar ul li a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .navbar ul li a:hover {
+        text-decoration: underline;
+      }
+
+      #dashboard {
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <h1>SPK WSM</h1>
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="kriteria.html">Kriteria</a></li>
+        <li><a href="alternatif.html">Alternatif</a></li>
+        <li><a href="penilaian.html">Penilaian</a></li>
+        <li><a href="hasil.html">Hasil</a></li>
+        <li><a href="index.html">Keluar</a></li>
+      </ul>
+    </nav>
+    <h2>Nilai Vektor WSM</h2>
+    <button onclick="prosesWSM()">Lakukan Perhitungan</button>
+
+    <div id="tabelVektorWSM"></div>
+
+    <h3>Hasil Ranking</h3>
+    <div id="tabelRanking"></div>
+
+    <script>
+      const apiUrl = "https://backend-wsm.vercel.app/api";
+
+      async function prosesWSM() {
+        try {
+          const res = await fetch(`${apiUrl}/proses-wsm`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert("❌ Gagal melakukan perhitungan: " + data.detail);
+            return;
+          }
+
+          const hasil = data.data;
+
+          // Ambil data nama siswa
+          const resAlt = await fetch(`${apiUrl}/alternatif`);
+          const dataAlt = await resAlt.json();
+          const altMap = {};
+          dataAlt.data.forEach((a) => {
+            altMap[a.id_alternatif] = a.nama_siswa;
+          });
+
+          tampilkanNilaiVektor(hasil, altMap);
+          tampilkanRanking(hasil, altMap);
+
+          alert("✅ Perhitungan berhasil dilakukan!");
+        } catch (error) {
+          alert("⚠️ Error: " + error.message);
+        }
+      }
+
+      function tampilkanNilaiVektor(data, altMap) {
+        let html = `
         <table>
           <thead>
             <tr>
@@ -102,22 +154,22 @@
           <tbody>
       `;
 
-      data.forEach((item, index) => {
-        html += `
+        data.forEach((item, index) => {
+          html += `
           <tr>
             <td>A${index + 1}</td>
             <td>${altMap[item.id_alternatif] || "-"}</td>
             <td>${item.total_nilai}</td>
           </tr>
         `;
-      });
+        });
 
-      html += `</tbody></table>`;
-      document.getElementById("tabelVektorWSM").innerHTML = html;
-    }
+        html += `</tbody></table>`;
+        document.getElementById("tabelVektorWSM").innerHTML = html;
+      }
 
-    function tampilkanRanking(data, altMap) {
-      let html = `
+      function tampilkanRanking(data, altMap) {
+        let html = `
         <table>
           <thead>
             <tr>
@@ -130,9 +182,9 @@
           <tbody>
       `;
 
-      data.sort((a, b) => b.total_nilai - a.total_nilai);
-      data.forEach((item, index) => {
-        html += `
+        data.sort((a, b) => b.total_nilai - a.total_nilai);
+        data.forEach((item, index) => {
+          html += `
           <tr class="highlight">
             <td>${index + 1}</td>
             <td>A${index + 1}</td>
@@ -140,11 +192,11 @@
             <td>${item.total_nilai}</td>
           </tr>
         `;
-      });
+        });
 
-      html += `</tbody></table>`;
-      document.getElementById("tabelRanking").innerHTML = html;
-    }
-  </script>
-</body>
+        html += `</tbody></table>`;
+        document.getElementById("tabelRanking").innerHTML = html;
+      }
+    </script>
+  </body>
 </html>
