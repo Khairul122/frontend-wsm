@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Penilaian</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #2c3e50;
+      padding: 10px 20px;
+      color: #fff;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .navbar ul li a:hover {
+      text-decoration: underline;
+    }
+
+    #Penilaian {
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #34495e;
+      color: white;
+    }
+
+    .btn-simpan {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #2ecc71;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1>SPK WSM</h1>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="kriteria.html">Kriteria</a></li>
+      <li><a href="alternatif.html">Alternatif</a></li>
+      <li><a href="penilaian.html">Penilaian</a></li>
+      <li><a href="hasil.html">Hasil</a></li>
+      <li><a href="index.html">Keluar</a></li>
+    </ul>
+  </nav>
+
+  <section id="Penilaian">
+    <h2>Input Penilaian Alternatif</h2>
+
+    <label for="alternatifSelect">Pilih Alternatif:</label>
+    <select id="alternatifSelect">
+      <option value="">-- Pilih Alternatif --</option>
+    </select>
+
+    <table id="kriteriaTable">
+      <thead>
+        <tr>
+          <th>Kode Kriteria</th>
+          <th>Nama Kriteria</th>
+          <th>Bobot</th>
+          <th>Nilai</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data kriteria akan dimuat di sini -->
+      </tbody>
+    </table>
+
+    <button class="btn-simpan" onclick="submitPenilaian()">Simpan Penilaian</button>
+  </section>
+
+  <script>
+    const apiBase = "https://backend-wsm.vercel.app/api";
+    let kriteriaList = [];
+  
+    async function loadAlternatif() {
+      const res = await fetch(`${apiBase}/alternatif`);
+      const data = await res.json();
+      const select = document.getElementById("alternatifSelect");
+  
+      data.data.forEach(alt => {
+        const opt = document.createElement("option");
+        opt.value = alt.id_alternatif;
+        opt.textContent = `${alt.nama_siswa} (${alt.NISN})`;
+        select.appendChild(opt);
+      });
+  
+      select.addEventListener("change", () => {
+        loadKriteriaWithPenilaian(select.value);
+      });
+    }
+  
+    async function loadKriteria() {
+      const res = await fetch(`${apiBase}/kriteria`);
+      const data = await res.json();
+      kriteriaList = data.data; // simpan agar bisa dipakai ulang
+    }
+  
+    async function loadKriteriaWithPenilaian(id_alternatif) {
+      const tbody = document.querySelector("#kriteriaTable tbody");
+      tbody.innerHTML = "";
+  
+      if (!id_alternatif) return;
+  
+      // Ambil penilaian jika sudah ada
+      const res = await fetch(`${apiBase}/penilaian/${id_alternatif}`);
+      const penilaianData = await res.json();
+      const nilaiMap = {};
+      penilaianData.data.forEach(p => {
+        nilaiMap[p.id_kriteria] = p.nilai;
+      });
+  
+      kriteriaList.forEach(k => {
+        const nilai = nilaiMap[k.id] || ""; // isi nilai kalau sudah ada
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${k.kode_kriteria}</td>
+          <td>${k.nama_kriteria}</td>
+          <td>${k.bobot}</td>
+          <td>
+            <input type="number" step="0.01" min="0" max="100"
+              data-id-kriteria="${k.id}" value="${nilai}" required />
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+  
+    async function submitPenilaian() {
+      const idAlternatif = document.getElementById("alternatifSelect").value;
+      if (!idAlternatif) {
+        alert("Pilih alternatif terlebih dahulu!");
+        return;
+      }
+  
+      const inputs = document.querySelectorAll("input[data-id-kriteria]");
+      const promises = [];
+  
+      for (const input of inputs) {
+        const nilai = parseFloat(input.value);
+        const id_kriteria = input.dataset.idKriteria;
+  
+        if (!isNaN(nilai)) {
+          // Hapus nilai sebelumnya (opsional, atau bisa update jika sudah ada)
+          await fetch(`${apiBase}/penilaian`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id_alternatif: parseInt(idAlternatif),
+              id_kriteria: parseInt(id_kriteria),
+              nilai: nilai
+            })
+          }).catch(err => console.error(err));
+        }
+      }
+  
+      alert("✅ Penilaian berhasil disimpan!");
+    }
+  
+    window.onload = async () => {
+      await loadKriteria();
+      await loadAlternatif();
+    };
+  </script>
+  
+</body>
+</html>

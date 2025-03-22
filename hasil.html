@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hasil</title>
+  <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2c3e50;
+            padding: 10px 20px;
+            color: #fff;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .navbar ul {
+            list-style: none;
+            display: flex;
+            gap: 15px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar ul li {
+            display: inline;
+        }
+
+        .navbar ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .navbar ul li a:hover {
+            text-decoration: underline;
+        }
+
+        #dashboard {
+            padding: 20px;
+        }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #2c3e50;
+      color: white;
+    }
+
+    .total {
+      font-weight: bold;
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>SPK WSM</h1>
+        <ul>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="kriteria.html">Kriteria</a></li>
+            <li><a href="alternatif.html">Alternatif</a></li>
+            <li><a href="penilaian.html">Penilaian</a></li>
+            <li><a href="hasil.html">Hasil</a></li>
+            <li><a href="index.html">Keluar</a></li>
+        </ul>
+    </nav>
+  <section id="hasil">
+    <h2>Hasil Perhitungan Metode WSM</h2>
+    <button onclick="hitungWSM()">Lakukan Perhitungan</button>
+    <div id="tabelHasil">
+      <!-- Tabel akan dimuat di sini -->
+    </div>
+  </section>
+
+  <script>
+    const baseUrl = "https://backend-wsm.vercel.app/api";
+
+    async function hitungWSM() {
+      try {
+        // Hitung ulang dengan proses-wsm
+        const proses = await fetch(`${baseUrl}/proses-wsm`);
+        const hasil = await proses.json();
+
+        if (proses.ok) {
+          alert("✅ Perhitungan berhasil dilakukan!");
+          tampilkanHasilLangkah(hasil.data);
+        } else {
+          alert("❌ Gagal menghitung: " + hasil.detail);
+        }
+      } catch (error) {
+        alert("⚠️ Error: " + error.message);
+      }
+    }
+
+    async function tampilkanHasilLangkah(dataHasil) {
+      const container = document.getElementById("tabelHasil");
+      container.innerHTML = "";
+
+      for (const hasil of dataHasil) {
+        const idAlternatif = hasil.id_alternatif;
+        const total = hasil.total_nilai;
+        const rank = dataHasil.findIndex(h => h.id_alternatif === idAlternatif) + 1;
+
+        // Ambil data alternatif
+        const altRes = await fetch(`${baseUrl}/alternatif`);
+        const altData = await altRes.json();
+        const alt = altData.data.find(a => a.id_alternatif === idAlternatif);
+
+        // Ambil penilaian siswa
+        const nilaiRes = await fetch(`${baseUrl}/penilaian/${idAlternatif}`);
+        const nilaiData = await nilaiRes.json();
+
+        // Ambil semua kriteria untuk bobot
+        const kriteriaRes = await fetch(`${baseUrl}/kriteria`);
+        const kriteriaData = await kriteriaRes.json();
+
+        let html = `
+          <h3>${alt.nama_siswa} (${alt.NISN})</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Kode Kriteria</th>
+                <th>Nama Kriteria</th>
+                <th>Nilai</th>
+                <th>Bobot</th>
+                <th>Nilai × Bobot</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        let totalNilai = 0;
+
+        kriteriaData.data.forEach(k => {
+          const nilai = nilaiData.data.find(n => n.id_kriteria === k.id)?.nilai ?? 0;
+          const bobot = k.bobot;
+          const hasilKali = nilai * bobot;
+          totalNilai += hasilKali;
+
+          html += `
+            <tr>
+              <td>${k.kode_kriteria}</td>
+              <td>${k.nama_kriteria}</td>
+              <td>${nilai}</td>
+              <td>${bobot}</td>
+              <td>${hasilKali.toFixed(4)}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+            <tr class="total">
+              <td colspan="4">Total</td>
+              <td>${totalNilai.toFixed(4)}</td>
+            </tr>
+            <tr class="total">
+              <td colspan="4">Ranking</td>
+              <td>${rank}</td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+
+        container.innerHTML += html;
+      }
+    }
+  </script>
+</body>
+</html>
